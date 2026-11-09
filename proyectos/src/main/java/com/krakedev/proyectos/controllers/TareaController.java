@@ -1,4 +1,4 @@
-package com.krakedev.proyectoscontrollers;
+package com.krakedev.proyectos.controllers;
 
 import java.util.ArrayList;
 import java.util.List;

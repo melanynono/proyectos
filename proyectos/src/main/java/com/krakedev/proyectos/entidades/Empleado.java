@@ -35,8 +35,7 @@ public class Empleado {
     public Empleado() {
     }
 
-    public Empleado(int id, String nombre, String cargo) {
-        this.id = id;
+    public Empleado(String nombre, String cargo) {
         this.nombre = nombre;
         this.cargo = cargo;
     }

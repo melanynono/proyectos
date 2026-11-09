@@ -1,4 +1,4 @@
-package com.krakedev.proyectoscontrollers;
+package com.krakedev.proyectos.controllers;
 
 import java.util.List;
 import java.util.Map;
@@ -8,23 +8,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.krakedev.proyectos.entidades.Empleado;
-import com.krakedev.proyectos.services.EmpleadoService;
+import com.krakedev.proyectos.entidades.Proyecto;
+import com.krakedev.proyectos.services.ProyectoService;
 
 @RestController
-@RequestMapping("/api/empleados")
-public class EmpleadoController {
+@RequestMapping("/api/proyectos")
+public class ProyectoController {
 
-    private final EmpleadoService empleadoService;
+    private final ProyectoService proyectoService;
 
-    public EmpleadoController(EmpleadoService empleadoService) {
-        this.empleadoService = empleadoService;
+    public ProyectoController(ProyectoService proyectoService) {
+        this.proyectoService = proyectoService;
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody Empleado empleado) {
+    public ResponseEntity<?> crear(@RequestBody Proyecto proyecto) {
         try {
-            Empleado nuevo = empleadoService.crear(empleado);
+            Proyecto nuevo = proyectoService.crear(proyecto);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -35,8 +35,8 @@ public class EmpleadoController {
     @GetMapping
     public ResponseEntity<?> listar() {
         try {
-            List<Empleado> empleados = empleadoService.listar();
-            return ResponseEntity.ok(empleados);
+            List<Proyecto> proyectos = proyectoService.listar();
+            return ResponseEntity.ok(proyectos);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", String.valueOf(e.getMessage())));
@@ -46,14 +46,14 @@ public class EmpleadoController {
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable int id) {
         try {
-            Optional<Empleado> empleado = empleadoService.buscarPorId(id);
+            Optional<Proyecto> proyecto = proyectoService.buscarPorId(id);
 
-            if (empleado.isPresent()) {
-                return ResponseEntity.ok(empleado.get());
+            if (proyecto.isPresent()) {
+                return ResponseEntity.ok(proyecto.get());
             }
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("mensaje", "Empleado no encontrado"));
+                    .body(Map.of("mensaje", "Proyecto no encontrado"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", String.valueOf(e.getMessage())));
@@ -63,17 +63,17 @@ public class EmpleadoController {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(
             @PathVariable int id,
-            @RequestBody Empleado empleado) {
+            @RequestBody Proyecto proyecto) {
         try {
-            Optional<Empleado> actualizado =
-                    empleadoService.actualizar(id, empleado);
+            Optional<Proyecto> actualizado =
+                    proyectoService.actualizar(id, proyecto);
 
             if (actualizado.isPresent()) {
                 return ResponseEntity.ok(actualizado.get());
             }
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("mensaje", "Empleado no encontrado"));
+                    .body(Map.of("mensaje", "Proyecto no encontrado"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", String.valueOf(e.getMessage())));
@@ -83,14 +83,14 @@ public class EmpleadoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable int id) {
         try {
-            boolean eliminado = empleadoService.eliminar(id);
+            boolean eliminado = proyectoService.eliminar(id);
 
             if (eliminado) {
                 return ResponseEntity.noContent().build();
             }
 
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("mensaje", "Empleado no encontrado"));
+                    .body(Map.of("mensaje", "Proyecto no encontrado"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", String.valueOf(e.getMessage())));

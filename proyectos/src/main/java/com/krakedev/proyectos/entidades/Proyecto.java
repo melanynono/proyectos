@@ -39,9 +39,9 @@ public class Proyecto {
     public Proyecto() {
     }
 
-    public Proyecto(int id, String nombre, String descripcion,
+    public Proyecto(String nombre, String descripcion,
                     LocalDate fechaInicio) {
-        this.id = id;
+  
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.fechaInicio = fechaInicio;
