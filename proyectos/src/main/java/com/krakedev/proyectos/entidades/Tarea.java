@@ -7,6 +7,7 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -32,12 +33,15 @@ public class Tarea {
 
     @Column(nullable = false)
     private double costoEstimado;
+    
+    @Column(nullable = true, length = 30)
+    private String estado;
 
     @ManyToOne
     @JoinColumn(name = "proyecto_id", nullable = false)
     private Proyecto proyecto;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "tarea_empleados",
         joinColumns = @JoinColumn(name = "tarea_id"),
@@ -49,12 +53,13 @@ public class Tarea {
     }
 
     public Tarea(String descripcion, LocalDate fechaLimite,
-                 double costoEstimado, Proyecto proyecto) {
+                 double costoEstimado, Proyecto proyecto, String estado) {
   
         this.descripcion = descripcion;
         this.fechaLimite = fechaLimite;
         this.costoEstimado = costoEstimado;
         this.proyecto = proyecto;
+        this.estado = estado;
     }
 
     public int getId() {
@@ -104,4 +109,14 @@ public class Tarea {
     public void setEmpleados(List<Empleado> empleados) {
         this.empleados = empleados;
     }
+
+	public String getEstado() {
+		return estado;
+	}
+
+	public void setEstado(String estado) {
+		this.estado = estado;
+	}
+    
+    
 }

@@ -3,6 +3,7 @@ package com.krakedev.proyectos.controllers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,77 +20,108 @@ import com.krakedev.proyectos.services.TareaService;
 @RequestMapping("/api/tareas")
 public class TareaController {
 
-    private final TareaService tareaService;
-    private final ProyectoRepository proyectoRepository;
-    private final EmpleadoRepository empleadoRepository;
+	private final TareaService tareaService;
+	private final ProyectoRepository proyectoRepository;
+	private final EmpleadoRepository empleadoRepository;
 
-    public TareaController(
-            TareaService tareaService,
-            ProyectoRepository proyectoRepository,
-            EmpleadoRepository empleadoRepository) {
+	public TareaController(TareaService tareaService, ProyectoRepository proyectoRepository,
+			EmpleadoRepository empleadoRepository) {
 
-        this.tareaService = tareaService;
-        this.proyectoRepository = proyectoRepository;
-        this.empleadoRepository = empleadoRepository;
-    }
+		this.tareaService = tareaService;
+		this.proyectoRepository = proyectoRepository;
+		this.empleadoRepository = empleadoRepository;
+	}
 
-    @PostMapping
-    public ResponseEntity<?> crear(@RequestBody Tarea tarea) {
-        try {
-            if (tarea.getProyecto() == null) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("mensaje", "Debe indicar un proyecto"));
+	@PostMapping
+	public ResponseEntity<?> crear(@RequestBody Tarea tarea) {
+		try {
+			if (tarea.getProyecto() == null) {
+				return ResponseEntity.badRequest().body(Map.of("mensaje", "Debe indicar un proyecto"));
+			}
+
+			int proyectoId = tarea.getProyecto().getId();
+
+			Proyecto proyecto = proyectoRepository.findById(proyectoId)
+					.orElseThrow(() -> new IllegalArgumentException("El proyecto no existe"));
+
+			tarea.setProyecto(proyecto);
+
+			List<Empleado> empleadosAsociados = new ArrayList<>();
+
+			if (tarea.getEmpleados() != null) {
+				for (Empleado empleado : tarea.getEmpleados()) {
+
+					Empleado existente = empleadoRepository.findById(empleado.getId())
+							.orElseThrow(() -> new IllegalArgumentException(
+									"El empleado con ID " + empleado.getId() + " no existe"));
+
+					empleadosAsociados.add(existente);
+				}
+			}
+
+			tarea.setEmpleados(empleadosAsociados);
+
+			Tarea nueva = tareaService.crear(tarea);
+
+			return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
+
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(Map.of("error", String.valueOf(e.getMessage())));
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(Map.of("error", String.valueOf(e.getMessage())));
+		}
+	}
+
+	@GetMapping
+	public ResponseEntity<?> listar() {
+		try {
+			List<Tarea> tareas = tareaService.listar();
+			return ResponseEntity.ok(tareas);
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(Map.of("error", String.valueOf(e.getMessage())));
+		}
+	}
+
+	@GetMapping("/{id}")
+	public ResponseEntity<?> buscarPorId(@PathVariable int id) {
+
+		try {
+
+			Optional<Tarea> tarea = tareaService.buscarPorId(id);
+
+			if (tarea.isPresent()) {
+				return ResponseEntity.ok(tarea.get());
+			}
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarea no encontrada: " + id);
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Error al buscar tarea: " + e.getMessage());
+		}
+
+	}
+	
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> eliminar(@PathVariable int id){
+		
+		try {
+            boolean eliminado = tareaService.eliminar(id);
+
+            if (!eliminado) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Tarea no encontrada: " + id);
             }
 
-            int proyectoId = tarea.getProyecto().getId();
-
-            Proyecto proyecto = proyectoRepository.findById(proyectoId)
-                    .orElseThrow(() ->
-                            new IllegalArgumentException("El proyecto no existe"));
-
-            tarea.setProyecto(proyecto);
-
-            List<Empleado> empleadosAsociados = new ArrayList<>();
-
-            if (tarea.getEmpleados() != null) {
-                for (Empleado empleado : tarea.getEmpleados()) {
-
-                    Empleado existente = empleadoRepository
-                            .findById(empleado.getId())
-                            .orElseThrow(() ->
-                                    new IllegalArgumentException(
-                                            "El empleado con ID " + empleado.getId()
-                                            + " no existe"));
-
-                    empleadosAsociados.add(existente);
-                }
-            }
-
-            tarea.setEmpleados(empleadosAsociados);
-
-            Tarea nueva = tareaService.crear(tarea);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", String.valueOf(e.getMessage())));
+            return ResponseEntity.ok("Tarea eliminada correctamente");
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", String.valueOf(e.getMessage())));
+                    .body("Error al eliminar tarea" + e.getMessage());
         }
-    }
-
-    @GetMapping
-    public ResponseEntity<?> listar() {
-        try {
-            List<Tarea> tareas = tareaService.listar();
-            return ResponseEntity.ok(tareas);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", String.valueOf(e.getMessage())));
-        }
-    }
+		
+	}
 }
