@@ -1,9 +1,9 @@
-
 package com.krakedev.proyectos.security;
 
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.auth0.jwt.JWT;
@@ -14,40 +14,52 @@ import com.auth0.jwt.interfaces.JWTVerifier;
 @Component
 public class JwtUtil {
 
+    private static final String CLAVE_SECRETA = "clave_secreta_123";
+
     private static final String EMISOR = "krakedevBackend";
 
-    @Value("${jwt.secret}")
-    private String claveSecreta;
+    private static final long TIEMPO_EXPIRACION = 3600000;
 
-    @Value("${jwt.expiration-ms:3600000}")
-    private long expiracionMs;
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
     public String generarToken(String username, String rol) {
 
-        Algorithm algoritmo = Algorithm.HMAC256(claveSecreta);
+        Algorithm algoritmo = Algorithm.HMAC256(CLAVE_SECRETA);
 
-        Date fechaActual = new Date();
-        Date fechaExpiracion = new Date(
-            fechaActual.getTime() + expiracionMs
-        );
+        long tiempoActual = System.currentTimeMillis();
 
-        return JWT.create()
-            .withIssuer(EMISOR)
-            .withSubject(username)
-            .withClaim("rol", rol)
-            .withIssuedAt(fechaActual)
-            .withExpiresAt(fechaExpiracion)
-            .sign(algoritmo);
+        Date fechaExpiracion = new Date(tiempoActual + TIEMPO_EXPIRACION);
+
+        String tokenGenerado = JWT.create()
+                .withIssuer(EMISOR)
+                .withSubject(username)
+                .withIssuedAt(new Date(tiempoActual))
+                .withExpiresAt(fechaExpiracion)
+                .withClaim("rol", rol)
+                .sign(algoritmo);
+
+        return tokenGenerado;
     }
 
-    public DecodedJWT verificarToken(String token) {
+    public DecodedJWT validarToken(String token) {
 
-        Algorithm algoritmo = Algorithm.HMAC256(claveSecreta);
+        try {
 
-        JWTVerifier verificador = JWT.require(algoritmo)
-            .withIssuer(EMISOR)
-            .build();
+            Algorithm algoritmo = Algorithm.HMAC256(CLAVE_SECRETA);
 
-        return verificador.verify(token);
+            JWTVerifier verificador = JWT.require(algoritmo)
+                    .withIssuer(EMISOR)
+                    .build();
+
+            DecodedJWT tokenDecodificado = verificador.verify(token);
+
+            return tokenDecodificado;
+
+        } catch (Exception e) {
+
+            logger.error("Error de validación del Token: " + e.getMessage());
+
+            return null;
+        }
     }
 }
