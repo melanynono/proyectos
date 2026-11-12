@@ -16,6 +16,8 @@ import com.krakedev.proyectos.repositories.EmpleadoRepository;
 import com.krakedev.proyectos.repositories.ProyectoRepository;
 import com.krakedev.proyectos.services.TareaService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/tareas")
 public class TareaController {
@@ -33,6 +35,7 @@ public class TareaController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> crear(@RequestBody Tarea tarea) {
 		try {
 			if (tarea.getProyecto() == null) {
@@ -75,6 +78,7 @@ public class TareaController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 	public ResponseEntity<?> listar() {
 		try {
 			List<Tarea> tareas = tareaService.listar();
